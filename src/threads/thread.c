@@ -244,6 +244,12 @@ void thread_sleep(int64_t ticks)
 
 }
 
+int64_t get_global_ticks(void){
+	return global_ticks;
+}
+
+
+
 void thread_wakeup(int64_t ticks)
 {
 	global_ticks = INT64_MAX;
@@ -347,13 +353,6 @@ thread_exit (void)
 {
   ASSERT (!intr_context ());
 
-  /* print latency */
-  if(thread_report_latency){
-    tid_t t_name = thread_tid();
-    int t_latency = timer_ticks() - (thread_current()->latency);
-	int t_latency2 = timer_ticks() - (thread_current()->latency2);
-    printf("Thread %d completed in %d ticks/////%d ticks\n", t_name, t_latency, t_latency2);
-  }
 #ifdef USERPROG
   process_exit ();
 #endif
@@ -363,6 +362,13 @@ thread_exit (void)
      when it calls thread_schedule_tail(). */
   intr_disable ();
   list_remove (&thread_current()->allelem);
+
+/* print latency */
+  if(thread_report_latency){
+	tid_t t_name = thread_tid();
+	int t_latency = timer_ticks() - (thread_current()->latency);
+	printf("Thread %d completed in %d ticks\n", t_name, t_latency);
+  }
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
@@ -604,7 +610,6 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* For Measuring Latency */
   t->latency = 0;
-  t->latency2 = timer_ticks();
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
